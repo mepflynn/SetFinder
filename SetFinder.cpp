@@ -9,6 +9,57 @@ using namespace cv;
 using namespace std;
 
 
+vector<Mat> extractCards(vector<vector<Point>> cardContours, Mat srcColor) {
+    vector<Mat> cardImages;
+    
+    for (vector<Point> contour : cardContours) {
+        // Obtain simplified rectangular coordinates for each card
+        RotatedRect rect = minAreaRect(contour);
+
+        vector<Point2f> box(4);
+
+        rect.points(box.data());
+        // Not doing the conversion step here the Python does?
+        // See if this causes issues ////////// TODO /////////
+
+        float width = rect.size.width;
+        float height = rect.size.height;
+
+        vector<Point2f> dstPoints = {{0,height-1},{0,0},{width-1,0},{width-1,height-1}};
+
+        Mat M = getPerspectiveTransform(box, dstPoints);
+
+        Mat warped;
+
+        warpPerspective(srcColor, warped, M, rect.size);
+
+        cardImages.push_back(warped);
+
+
+        
+        // New blank Mat, that is the same size as the current card rectangle
+
+
+
+
+        // Extract a new Mat out of original image with these card rectangle bounds
+
+        ////////////////////////////////////////////////// WORK HERE////////////
+
+        // // Copy the card image from these bounds onto that new Mat card
+        // for (int x = 0; x < rect.size.height; x++) {
+        //     for (int y = 0; y < rect.size.width; y++) {
+        //         card[x][y] = 
+        //     }
+        // }
+        
+    }
+
+    return cardImages;
+
+}
+
+
 int main( int argc, char** argv )
 {
     cout << "aa" << endl;
@@ -51,15 +102,26 @@ int main( int argc, char** argv )
 
 
     // Parsing the vector contours to find which are the outlines of cards
-    vector<vector<Point>> biggerContours;
+    vector<vector<Point>> cardContours;
 
-    // use 1/30th of total image size as benchmark for minimum card size
+    // use 1/35th of total image size as benchmark for minimum card size
+    // This is arbitrary, and is maybe a bit too small? TODO: Refine this constant
     int cardSizeThreshold = (int)((srcBin.rows * srcBin.cols) / 35);
 
     for (int i = 0; i < contours.size(); i++) {
         // If contour meets size threshold, add it to the list
-        if (contourArea(contours[i]) > cardSizeThreshold) biggerContours.push_back(contours[i]);
+        if (contourArea(contours[i]) > cardSizeThreshold) cardContours.push_back(contours[i]);
     }
+
+    vector<Mat> cardImages = extractCards(cardContours, srcColor);
+
+
+    for (int i = 0; i < cardImages.size(); i++) {
+        string label = "Card #" + to_string(i);
+        imshow(label, cardImages[i]);
+    }
+
+    waitKey(0);
 
     // Create a destination mat for the results
     Mat dst = Mat::zeros(srcGray.rows, srcGray.cols, CV_8UC3);
@@ -72,9 +134,10 @@ int main( int argc, char** argv )
     //     Scalar color( rand()&255, rand()&255, rand()&255 );
     //     drawContours( dst, contours, idx, color, FILLED, 8, hierarchy );
     // }
-    // Instead, draw only the bigger contours
+
+    // Instead, draw only the card's contours
     Scalar color( rand()&255, rand()&255, rand()&255 );
-    drawContours(dst, biggerContours, -1, color, 3);
+    drawContours(dst, cardContours, FILLED, color, 3);
     namedWindow( "Components", 1 );
     imshow( "Components", dst );
     waitKey(0);

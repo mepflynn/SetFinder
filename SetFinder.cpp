@@ -22,8 +22,10 @@ vector<Mat> extractCards(vector<vector<Point>> cardContours, Mat srcColor) {
         // Not doing the conversion step here the Python does?
         // See if this causes issues ////////// TODO /////////
 
+
         float width = rect.size.width;
         float height = rect.size.height;
+
 
         vector<Point2f> dstPoints = {{0,height-1},{0,0},{width-1,0},{width-1,height-1}};
 
@@ -33,25 +35,15 @@ vector<Mat> extractCards(vector<vector<Point>> cardContours, Mat srcColor) {
 
         warpPerspective(srcColor, warped, M, rect.size);
 
-        cardImages.push_back(warped);
-
-
         
-        // New blank Mat, that is the same size as the current card rectangle
 
+        if (warped.rows < warped.cols) {
+            // This card is laid out horizontal
+            // Transform the mat 90 degree to be vertical
+            rotate(warped, warped, ROTATE_90_CLOCKWISE);
+        } 
 
-
-
-        // Extract a new Mat out of original image with these card rectangle bounds
-
-        ////////////////////////////////////////////////// WORK HERE////////////
-
-        // // Copy the card image from these bounds onto that new Mat card
-        // for (int x = 0; x < rect.size.height; x++) {
-        //     for (int y = 0; y < rect.size.width; y++) {
-        //         card[x][y] = 
-        //     }
-        // }
+        cardImages.push_back(warped);
         
     }
 

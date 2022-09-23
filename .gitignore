@@ -1,2 +1,5 @@
-*.jpg
 *.exe
+*.TIFF
+*.jpg
+/.vscode
+/.cardimages

@@ -57,6 +57,22 @@ namespace SetFinding {
             }
 
 
+            // Extract shape from image, save it out to an appropriately sized file 
+            void saveShapeToJPG(Mat img, Rect boundRect, string fileName) {
+                // Extract the shape into a separate Mat via
+                // This overload of the Mat constructor
+                Mat shape = Mat(img, boundRect);
+
+                // shape still has a pointer to the original image
+                // This is OK because we only need it briefly:
+
+                // Save a copy of the image shape to jpg
+                imwrite(fileName,shape);
+
+                
+            }
+
+
         };
 }
 

@@ -107,7 +107,7 @@ vector<vector<Point>> findCardContours(Mat srcColor) {
 
 int main( int argc, char** argv )
 {
-    cout << "aa" << endl;
+    
  
     // Retrieve the image into a Mat
     string img = "Set_Board_Shrunk.jpg";
@@ -137,10 +137,16 @@ int main( int argc, char** argv )
 
     // Parse card images, construct Card objects
     vector<SetFinding::Card> theBoard;
+
     
+    
+    int cardNum = 1;
     for (Mat image : cardImages) {
+        cout << cardNum << endl;
+        cardNum++;
         theBoard.push_back(SetFinding::Card(image));
     }
     
     return 0;
 }
+

@@ -69,8 +69,34 @@ namespace SetFinding {
                 // Save a copy of the image shape to jpg
                 imwrite(fileName,shape);
 
+
+                //////////////////////////////////////////////////////////////
+                //Below is a more fleshed out and case-specific implementation
+
+                vector<int> shapeIndices;
+                // previously populated the above vector with indices of suspected shapes in contours[]
+                // This needs implementation for the following to work
+
+                string fileName;
+                int fileNum = rand()&255;
+                for(int ix : shapeIndices) { 
+                    //Rect boundRect = boundingRect(contours[ix]);
+
+                    
+            
+                    fileName = "card" + to_string(fileNum) + ".jpg";
+                    fileNum++;
+
+                    //Mat shape = Mat(maskImage, boundRect);
+
+                    imwrite(fileName,shape);
+
+                }
+
                 
             }
+
+
 
 
         };

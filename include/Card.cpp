@@ -16,16 +16,22 @@ namespace SetFinding {
         // extract the shape(s) from it, and then
         // categorize those shapes to set values for
         // shape, shading, color, and number.
-        Card::Card(Mat sourceImg) {
+        Card::Card(Mat src) {
             // Default values for now
             shape Shape = oval;
             shading Shading = open;
             color Color = red;
             number Number = one;
 
-            sourceImage = sourceImg;
+            this->sourceImage = src;
 
-            cardPeeper(sourceImage);
+            // Initialize related Mats (images) for future use
+            maskImage = Mat::zeros(sourceImage.rows, sourceImage.cols, CV_8UC1); ///TODO: Channel error issue; maskImage needs to stay single-channel, or be converted
+            maskedShapes  = Mat::zeros(sourceImage.rows, sourceImage.cols, CV_8UC3);
+
+
+
+            cardPeeper();
         }
 
         // Convert image to grayscale and run canny edge detection algorithm
@@ -84,6 +90,55 @@ namespace SetFinding {
             return src;
         }
 
+        void Card::maskAndIsolateShapes(Mat erodeDilateImage) {
+            // Extract contours from the card image, filtering for setShapes by size and size-ratio (rectangular)
+            vector<vector<Point>> contours;
+            vector<Vec4i> hierarchy; // This code based on https://docs.opencv.org/3.4/d6/d6e/group__imgproc__draw.html#ga746c0625f1781f1ffc9056259103edbc
+            findContours(erodeDilateImage, contours, hierarchy,
+                RETR_CCOMP, CHAIN_APPROX_SIMPLE );
+
+            
+            
+
+            int idx = 0;
+            int imageArea = sourceImage.rows * sourceImage.cols;
+            for( ; idx < contours.size(); idx++) {
+                // filter by minimum/maximum contour area
+                // Must be bigger than specks on the card, but smaller than the entire card.
+                // Shape is about 1/6th, so: minimum 1/12th of card, max 1/2
+                int shapeArea = contourArea(contours[idx]);
+                int shapeAreaMinimum = imageArea / 12;
+                int shapeAreaMaximum = imageArea / 2;
+                if (shapeArea > shapeAreaMinimum && shapeArea < shapeAreaMaximum) {
+
+                    // At this point, we're probably looking at a shape!
+                    // Run one last test, check that width >> height (shape oughtta be horizontal)
+                    // Start by creating bounding rectangle
+                    Rect rect = boundingRect(contours[idx]);
+
+                    // if taller than wide, skip to next contour
+                    if (rect.height > rect.width) continue;
+
+                    // Shape status is confirmed.
+                    // Add it to the mask, for extraction and then processing
+                    // (Draw it in color white, filled in shape via -1 for thickness)
+                    drawContours(maskImage, contours, idx, Scalar(255,255,255), -1);
+                    
+                    // Also, draw this contour into a separate image and normalize it
+                    // This image will be compared to references to determine the shape's identity
+                    // WARNING: This new image is simply a partial pointer to the original maskImage
+                    // if maskImage gets changes or goes out of scope, the information is lost.
+                    binaryCardShapes.push_back(Mat(maskImage,rect));
+                    shapeLocations.push_back(rect);
+
+
+                    
+                    // Categorize this shape by its shape, shading, and color
+                    // categorizeShape()
+                }            
+            }
+        }
+
         void Card::whatNumber(int numShapes) {
             // How many shapes are on the card?
             switch (numShapes) {
@@ -99,16 +154,16 @@ namespace SetFinding {
             }
         }
 
-        void Card::whatShape(vector<Mat> cardShapes) {
+        void Card::whatShape() {
             // Retrieve each reference shape
-            Mat refDiamond = imread("/shape_references/diamond.jpg");
-            Mat refSquiggle = imread("/shape_references/squiggle.jpg");
-            Mat refOval = imread("/shape_references/oval.jpg");
+            Mat refDiamond = imread("/shape_references/diamond.jpg", CV_8UC1);
+            Mat refSquiggle = imread("/shape_references/squiggle.jpg", CV_8UC1);
+            Mat refOval = imread("/shape_references/oval.jpg", CV_8UC1);
 
             vector<Mat> refShapes = {refDiamond, refSquiggle, refOval};
 
             vector<shape> shapeGuesses;
-            for (Mat shape : cardShapes) {
+            for (Mat shape : binaryCardShapes) {
                 
                 vector<double> comparisonReturns;
 
@@ -116,21 +171,40 @@ namespace SetFinding {
                     comparisonReturns.push_back(matchShapes(shape,refShape,CONTOURS_MATCH_I2,0));
                 }
 
-                auto maxFinder = max_element(comparisonReturns.begin(), comparisonReturns.end());
+                double min = comparisonReturns[0];
+                int minIndex = 0;
+                for (int index = 1; index < comparisonReturns.size(); index++) {
+                    if (min > comparisonReturns[index]) {
+                        min = comparisonReturns[index];
+                        min = index;
+                    }
+                }
 
-                //int maxIndex = maxFinder.nextIndex
-
-                ///TODO: Implement this index-finding behavior to determine the best matched shape.
-                
-                switch (*maxFinder) {
-                    case((double)0):
+                switch(minIndex) {
+                    case(0):
                         shapeGuesses.push_back(diamond);
                         break;
-                    case((double)1):
+                    case(1):
                         shapeGuesses.push_back(squiggle);
                         break;
-                    case((double)2):
+                    case(2):
                         shapeGuesses.push_back(oval);
+                        break;
+                }
+            }
+
+
+            // Shapes found and decided; print the findings:
+            for (shape guess : shapeGuesses ) {
+                switch (guess) {
+                    case(diamond):
+                        cout << "Found diamond" << endl;
+                        break;
+                    case (squiggle):
+                        cout << "Found squiggle" << endl;
+                        break;
+                    case (oval):
+                        cout << "Found oval" << endl;
                         break;
                 }
             }
@@ -143,23 +217,26 @@ namespace SetFinding {
 
         // Given the extracted shapes, determine their
         // color, shape, shading, and number
+        // This information exists in the various image member variables
         //
-        // Function is void, and will set the card 
-        // parameters from within 
-        void Card::categorizeShapes(vector<Mat> cardShapes) {
+        // Function returns void, and will set the card parameters from within 
+        void Card::categorizeShapes() {
             // Check for a valid number of shapes, 0 < S < 4
-            if (cardShapes.empty() || cardShapes.size() > 3) {
+            if (binaryCardShapes.empty() || binaryCardShapes.size() > 3) {
                 throw invalid_argument("Invalid argument size. Card must have 1-3 shapes detected. Check shape contouring.");
             }
 
             // Find the number of shapes, set 'Number'
-            whatNumber(cardShapes.size());
+            whatNumber(binaryCardShapes.size());
+
+            // Find the shape of the shapes, set 'Shape'
+            whatShape();
 
 
         }
 
         // Toplevel fcn for the steps of parsing the card image
-        void Card::cardPeeper(Mat sourceImage) { // This name via Sidney W.
+        void Card::cardPeeper() { // This name via Sidney W.
 
             // Apply Canny edge detection to create a clean binary image of edges
             Mat edgesImage = cannyEdgeDetection(sourceImage);
@@ -167,82 +244,21 @@ namespace SetFinding {
             // The above may have left gaps along the edges, causing problems with contour detection
             // Run a series of erosion/dilation cycles to fill in gaps
             Mat erodeDilateImage = edgeErosionDilation(edgesImage);
+    
+            // Mask out shapes, and obtain binary shape outlines cropped out from the card image
+            // This function populates maskImage, binaryCardShapes, and shapeLocations
+            maskAndIsolateShapes(erodeDilateImage);
 
-
-            // Extract contours from the card image, filtering for setShapes by size and size-ratio (rectangular)
-            vector<vector<Point>> contours;
-            vector<Vec4i> hierarchy; // This code based on https://docs.opencv.org/3.4/d6/d6e/group__imgproc__draw.html#ga746c0625f1781f1ffc9056259103edbc
-            findContours(erodeDilateImage, contours, hierarchy,
-                RETR_CCOMP, CHAIN_APPROX_SIMPLE );
-
-            Mat maskImage = Mat::zeros(sourceImage.rows, sourceImage.cols, CV_8UC3);
-
-            vector<int> shapeIndices;
-
-            int idx = 0;
-            int imageArea = edgesImage.rows * edgesImage.cols;
-            for( ; idx < contours.size(); idx++) {
-                // filter by minimum/maximum contour area
-                // Must be bigger than specks on the card, but smaller than the entire card.
-                // Shape is about 1/6th, so: minimum 1/12th of card, max 1/2
-                int shapeArea = contourArea(contours[idx]);
-                int shapeAreaMinimum = imageArea / 12;
-                int shapeAreaMaximum = imageArea / 2;
-                if (shapeArea > shapeAreaMinimum && shapeArea < shapeAreaMaximum) {
-
-                    // At this point, we're probably looking at a shape!
-                    // Add it to the mask, for extraction and then processing
-                    // (Draw it in color white, filled in shape via -1 for thickness)
-                    drawContours(maskImage, contours, idx, Scalar(255,255,255), -1);
-                    shapeIndices.push_back(idx);
-                    
-                    // Then if the contour is large enough, create a bounding minSizeRectangle.
-                    // RotatedRect rect = minAreaRect(contour);
-                    // Lastly, verify that width >> height
-                    // This is TBD for now, may not be needed, left unimplemented /////////////
-
-                    
-                    // Categorize this shape by its shape, shading, and color
-                    // categorizeShape()
-                }            
-            }
-
-                        // Test display the mask itself
-            imshow("Mask for image processing",maskImage);
-            waitKey(0);
-
-            // Also, draw these contours out into JPGs for shape comparison
-            string fileName;
-            int fileNum = rand()&255;
-            for(int ix : shapeIndices) {
-                Rect boundRect = boundingRect(contours[ix]);
-
-                
-        
-                fileName = "card" + to_string(fileNum) + ".jpg";
-                fileNum++;
-
-                Mat shape = Mat(maskImage, boundRect);
-
-                imwrite(fileName,shape);
-
-            }
-
-            // Test display the mask itself
-            imshow("Mask for image processing",maskImage);
 
             // Having drawn the shapes onto the mask, mask shapes out of the source image
-            Mat maskedShapes  = Mat::zeros(sourceImage.rows, sourceImage.cols, CV_8UC3);
+            // and deposit that result in maskedShapes
             bitwise_and(maskImage, sourceImage, maskedShapes);
 
-            // // Test display the masked shapes
-            // imshow("Hopefully masked out shapes",maskedShapes);
-            // waitKey(0);
-
             // time for categorizeShapes
+            categorizeShapes();
         }
+
+        
 
 
 }
-
-

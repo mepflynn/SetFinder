@@ -37,22 +37,32 @@ class Card {
         // and prepare the image for contour detection
         Mat edgeErosionDilation(Mat src);
 
+        // Run findContours, then sort the contours for those
+        // representing shapes, and mask + isolate those shapes
+        void maskAndIsolateShapes(Mat erodeDilateImage);
+
         // How many shapes are on the card?
         void whatNumber(int numShapes);
 
-        void whatShape(vector<Mat> cardShapes);
+        void whatShape();
 
         // Given the extracted shapes, determine their
         // color, shape, shading, and number
-        void categorizeShapes(vector<Mat> cardShapes);
+        void categorizeShapes();
 
         // Toplevel fcn for the steps of parsing the card image
-        void cardPeeper(Mat sourceImage);
+        void cardPeeper();
 
+
+        // Image files and associated parameters
         Mat sourceImage;
+        Mat maskImage;
+        Mat maskedShapes;
+        vector<Mat> binaryCardShapes; 
+        vector<Rect> shapeLocations;
 
 
-        // Instatiate copies of each
+        // Instatiate copies of each card-defining enum
         shape Shape;
         shading Shading;
         color Color;

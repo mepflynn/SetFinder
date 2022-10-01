@@ -168,8 +168,11 @@ namespace SetFinding {
             vector<vector<Point>> refContours;
 
             for (Mat shape : refShapes) {
-                drawContours(shape, refContours)
+                //drawContours(shape, refContours)
             }
+            ///TODO: Fixed issue with minFinding
+            ///      All matchShapes seem to be the same num?
+            ///      Try running matchShapes on contours
 
             vector<shape> shapeGuesses;
             for (Mat shape : binaryShapes) {

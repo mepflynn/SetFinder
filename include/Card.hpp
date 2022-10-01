@@ -58,8 +58,9 @@ class Card {
         Mat sourceImage;
         Mat maskImage;
         Mat maskedShapes;
-        vector<Mat> binaryCardShapes; 
+        vector<Mat> binaryShapes; 
         vector<Rect> shapeLocations;
+        vector<vector<Point>> shapeContours;
 
 
         // Instatiate copies of each card-defining enum

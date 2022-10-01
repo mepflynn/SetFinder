@@ -130,13 +130,14 @@ namespace SetFinding {
                     // WARNING: This new image is simply a partial pointer to the original maskImage
                     // if maskImage gets changes or goes out of scope, the information is lost.
                     
-                    // Push the selected shape image into binaryCardShapes for shape analysis
+                    // Push the selected shape image into binaryShapes for shape analysis
                     // Make a temp Mat to turn this image into singlechannel for future call to matchShape()
                     Mat binaryCard;
                     cvtColor(Mat(maskImage,rect), binaryCard, COLOR_BGR2GRAY);
 
-                    binaryCardShapes.push_back(binaryCard);
+                    binaryShapes.push_back(binaryCard);
                     shapeLocations.push_back(rect);
+                    shapeContours.push_back(contours[idx]);
                 }            
             }
         }
@@ -164,8 +165,14 @@ namespace SetFinding {
 
             vector<Mat> refShapes = {refDiamond, refSquiggle, refOval};
 
+            vector<vector<Point>> refContours;
+
+            for (Mat shape : refShapes) {
+                drawContours(shape, refContours)
+            }
+
             vector<shape> shapeGuesses;
-            for (Mat shape : binaryCardShapes) {
+            for (Mat shape : binaryShapes) {
                 
                 vector<double> comparisonReturns;
 
@@ -178,7 +185,7 @@ namespace SetFinding {
                 for (int index = 1; index < comparisonReturns.size(); index++) {
                     if (min > comparisonReturns[index]) {
                         min = comparisonReturns[index];
-                        min = index;
+                        minIndex = index;
                     }
                 }
 
@@ -225,23 +232,23 @@ namespace SetFinding {
         void Card::categorizeShapes() {
             // Check for a valid number of shapes, 0 < S < 4
             try {
-                if (binaryCardShapes.empty() || binaryCardShapes.size() > 3) {
+                if (binaryShapes.empty() || binaryShapes.size() > 3) {
                     throw invalid_argument("Invalid argument size. Card must have 1-3 shapes detected. Check shape contouring.");
                 }
             } catch(invalid_argument) {
-                // cout << "Found " <<  binaryCardShapes.size() << " shapes." << endl;
+                // cout << "Found " <<  binaryShapes.size() << " shapes." << endl;
 
-                // for (Mat oneShape : binaryCardShapes) {
+                // for (Mat oneShape : binaryShapes) {
                 //     cout << "Area of shape:" << oneShape.rows << " by " << oneShape.cols << endl;
                 // }
 
-                if (binaryCardShapes.empty()) {
+                if (binaryShapes.empty()) {
                     cout << "No shapes found." << endl;
                     return;
                 }
 
                 // int shapeNum = 1;
-                // for (Mat oneShape : binaryCardShapes) {
+                // for (Mat oneShape : binaryShapes) {
                 //     imshow("shape number" + to_string(shapeNum),oneShape);
                 //     shapeNum++;
                 // }
@@ -259,14 +266,14 @@ namespace SetFinding {
                 // it finds them each twice
                 // The bandaid solution here is to delete half the shapes when there are too many
                 cout << "Too many shapes found, halving" << endl;
-                int halfSize = binaryCardShapes.size() / 2;
-                while (binaryCardShapes.size() > halfSize) {
-                    binaryCardShapes.pop_back();
+                int halfSize = binaryShapes.size() / 2;
+                while (binaryShapes.size() > halfSize) {
+                    binaryShapes.pop_back();
                 }
             }
 
             // Find the number of shapes, set 'Number'
-            whatNumber(binaryCardShapes.size());
+            whatNumber(binaryShapes.size());
 
             // Find the shape of the shapes, set 'Shape'
             whatShape();
@@ -285,7 +292,7 @@ namespace SetFinding {
             Mat erodeDilateImage = edgeErosionDilation(edgesImage);
     
             // Mask out shapes, and obtain binary shape outlines cropped out from the card image
-            // This function populates maskImage, binaryCardShapes, and shapeLocations
+            // This function populates maskImage, binaryShapes, and shapeLocations
             maskAndIsolateShapes(erodeDilateImage);
 
 
@@ -297,10 +304,10 @@ namespace SetFinding {
 
             // Convert maskImage down to a CV_8UC1 (single-channel image) for future 
             // disassembly into individual CV_8UC1 shapes
-            // for (int i = 0; i < binaryCardShapes.size(); i++) {
+            // for (int i = 0; i < binaryShapes.size(); i++) {
             //     Mat singleChannelShape = Mat::zeros(maskImage.rows, maskImage.cols, CV_8UC1);
 
-            //     threshold(maskImage, binaryCardShapes[i], 1, 255, THRESH_BINARY);
+            //     threshold(maskImage, binaryShapes[i], 1, 255, THRESH_BINARY);
             // }
 
 

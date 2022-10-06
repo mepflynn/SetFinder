@@ -154,6 +154,8 @@ namespace SetFinding {
                 case (3):
                     Number = three;
                     break;
+                default:
+                    cout << "Greater than or less than 3 shapes, oopsie" << endl;
             }
         }
 
@@ -162,6 +164,19 @@ namespace SetFinding {
             Mat refDiamond = imread("/shape_references/diamond.jpg", CV_8UC1);
             Mat refSquiggle = imread("/shape_references/squiggle.jpg", CV_8UC1);
             Mat refOval = imread("/shape_references/oval.jpg", CV_8UC1);
+
+            for (int i = 0; i < binaryShapes.size(); i++) {
+                string label = "shape #" + to_string(i);
+                imshow(label, binaryShapes[i]);
+            }
+
+            imshow("src",sourceImage);
+            imshow("mask",maskImage);
+            imshow("mask Shapes",maskedShapes);
+
+
+
+            waitKey(0);
 
             vector<Mat> refShapes = {refDiamond, refSquiggle, refOval};
 

@@ -9,10 +9,13 @@
             "args": [
                 "-g",
                 "${file}",
+                "${workspaceFolder}\\include\\Card.o",
+                "${workspaceFolder}\\include\\Board.o",
                 "-o",
                 "${fileDirname}\\${fileBasenameNoExtension}.exe",
+                "-I","${workspaceFolder}\\include",
                 "-I","C:\\opencv\\OpenCV-MinGW-Build-OpenCV-4.1.1-x64\\include",
-                "-L","C:\\opencv\\OpenCV-MinGW-Build-OpenCV-4.1.1-x64\\x64\\mingw\\bin",                
+                "-L","C:\\opencv\\OpenCV-MinGW-Build-OpenCV-4.1.1-x64\\x64\\mingw\\bin",               
                 "-llibopencv_calib3d411",
                 "-llibopencv_core411",
                 "-llibopencv_dnn411",
@@ -38,6 +41,15 @@
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+            "type": "shell",
+            "label": "build dependencies",
+            "command": "make",
+            "args":[
+                "-C",
+                "./.vscode"
+            ]
         }
     ]
 }

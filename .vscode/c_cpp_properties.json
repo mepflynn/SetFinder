@@ -3,10 +3,9 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/**",
+                "C:/Users/maxfl/Documents/VS_Code_Projects/CPP_Projects/SetFinder/include",
                 "C:/opencv/OpenCV-MinGW-Build-OpenCV-4.1.1-x64/include",
-                "C:/mingw-w64/x86_64-8.1.0-posix-seh-rt_v6-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++",
-                "${default}"
+                "C:/mingw-w64/x86_64-8.1.0-posix-seh-rt_v6-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/8.1.0/include/c++"
             ],
             "defines": [
                 "_DEBUG",

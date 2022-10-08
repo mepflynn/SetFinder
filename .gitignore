@@ -1,5 +1,6 @@
 *.exe
 *.TIFF
 *.jpg
-/.vscode
-/.cardimages
+/cardimages
+*.o
+/shape_references

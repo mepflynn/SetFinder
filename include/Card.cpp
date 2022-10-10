@@ -1,6 +1,7 @@
 #include <opencv2/opencv.hpp>
 
 #include <algorithm>
+#include <fstream>
 
 using namespace cv;
 using namespace std;
@@ -8,6 +9,50 @@ using namespace std;
 #include "Card.hpp"
 
 namespace SetFinding {
+    
+        int contoursIndex = 1;
+
+            void saveContourToCSV(vector<Point> contour, string fileName) {
+                ofstream file;
+
+                file.open(fileName);
+
+                // Column headers
+                file << "x,y\n";
+
+                for (auto itr = contour.begin(); itr < contour.end(); itr++) {
+                    // Push one point (x,y) to a line, sep. by comma and terminated by newline
+                    file << to_string(itr->x) << "," << to_string(itr->y) << "\n";
+                }
+
+            }
+
+            vector<Point> contourFromCSV(string fileName) {
+                ifstream file;
+                vector<Point> contour;
+
+                file.open(fileName);
+
+                string line;
+                int x,y,i;
+
+                // Run on one line of the CSV at a time (one Point obj)
+                while (!file.eof()) {
+                    getline(file, line, '\n');
+
+                    // Find the separator ','
+                    i = line.find(',');
+
+                    // X is all the nums up until the comma
+                    x = stoi(line.substr(0,i));
+                    // Y is after the comma, til EOS minus the '\n'
+                    y = stoi(line.substr(i + 1,line.length() - i - 2));
+
+                    contour.push_back(Point(x,y));
+                }
+                
+                return contour;
+            }
 
 
 
@@ -124,6 +169,10 @@ namespace SetFinding {
                     // Add it to the mask, for extraction and then processing
                     // (Draw it in color white, filled in shape via -1 for thickness)
                     drawContours(maskImage, contours, idx, Scalar(255,255,255), -1);
+
+                    // Write this contour out to a file.
+                    saveContourToCSV(contours[idx], "contour" + to_string(contoursIndex) + ".csv");
+                    contoursIndex++;
                     
                     // Also, draw this contour into a separate image and normalize it
                     // This image will be compared to references to determine the shape's identity
@@ -134,6 +183,9 @@ namespace SetFinding {
                     // Make a temp Mat to turn this image into singlechannel for future call to matchShape()
                     Mat binaryCard;
                     cvtColor(Mat(maskImage,rect), binaryCard, COLOR_BGR2GRAY);
+
+                    imshow("bin card #" + to_string(contoursIndex), binaryCard);
+                    waitKey(0);
 
                     binaryShapes.push_back(binaryCard);
                     shapeLocations.push_back(rect);

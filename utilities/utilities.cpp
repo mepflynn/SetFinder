@@ -90,6 +90,9 @@ namespace SetFinding {
             
             }
 
+            // Usage example:
+            // saveContourToCSV(contours[idx], "contour" + to_string(contoursIndex) + ".csv");
+            // contoursIndex++;
             void saveContourToCSV(vector<Point> contour, string fileName) {
                 ofstream file;
 

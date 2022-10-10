@@ -165,29 +165,28 @@ namespace SetFinding {
             Mat refSquiggle = imread("/shape_references/squiggle.jpg", CV_8UC1);
             Mat refOval = imread("/shape_references/oval.jpg", CV_8UC1);
 
-            for (int i = 0; i < binaryShapes.size(); i++) {
-                string label = "shape #" + to_string(i);
-                imshow(label, binaryShapes[i]);
-            }
 
-            imshow("src",sourceImage);
-            imshow("mask",maskImage);
-            imshow("mask Shapes",maskedShapes);
-
-
-
-            waitKey(0);
 
             vector<Mat> refShapes = {refDiamond, refSquiggle, refOval};
 
-            vector<vector<Point>> refContours;
+            vector<vector<vector<Point>>> refContours;
+            vector<vector<Point>> refContour;
 
-            for (Mat shape : refShapes) {
-                //drawContours(shape, refContours)
+            for (int j = 0; j < refShapes.size(); j++) {
+                vector<vector<Point>> contours;
+                vector<Vec4i> hierarchy; // This code based on https://docs.opencv.org/3.4/d6/d6e/group__imgproc__draw.html#ga746c0625f1781f1ffc9056259103edbc
+                findContours(refShapes[j], refContour, hierarchy,
+                    RETR_CCOMP, CHAIN_APPROX_SIMPLE );
+                refContours.push_back(refContour);
             }
-            ///TODO: Fixed issue with minFinding
-            ///      All matchShapes seem to be the same num?
-            ///      Try running matchShapes on contours
+
+            for (vector<vector<Point>> cntList : refContours) {
+                for (vector<Point> contour : cntList) {
+                    if (contourArea(contour) > refDiamond.rows * refDiamond.cols / 2) {
+                        shapeContours.push_back(contour);
+                    }
+                }
+            }
 
             vector<shape> shapeGuesses;
             for (Mat shape : binaryShapes) {

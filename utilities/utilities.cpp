@@ -92,7 +92,7 @@ namespace SetFinding {
 
             void saveContourToCSV(vector<Point> contour, string fileName) {
                 ofstream file;
-                
+
                 file.open(fileName);
 
                 // Column headers
@@ -100,9 +100,36 @@ namespace SetFinding {
 
                 for (auto itr = contour.begin(); itr < contour.end(); itr++) {
                     // Push one point (x,y) to a line, sep. by comma and terminated by newline
-                    file << itr->x << "," << itr->y << "\n";
+                    file << to_string(itr->x) << "," << to_string(itr->y) << "\n";
                 }
 
+            }
+
+            vector<Point> contourFromCSV(string fileName) {
+                ifstream file;
+                vector<Point> contour;
+
+                file.open(fileName);
+
+                string line;
+                int x,y,i;
+
+                // Run on one line of the CSV at a time (one Point obj)
+                while (!file.eof()) {
+                    getline(file, line, '\n');
+
+                    // Find the separator ','
+                    i = line.find(',');
+
+                    // X is all the nums up until the comma
+                    x = stoi(line.substr(0,i));
+                    // Y is after the comma, til EOS minus the '\n'
+                    y = stoi(line.substr(i + 1,line.length() - i - 2));
+
+                    contour.push_back(Point(x,y));
+                }
+                
+                return contour;
             }
 
 

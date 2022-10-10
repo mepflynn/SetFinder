@@ -6,12 +6,48 @@
 
 // Local includes
 #include "Card.hpp"
-#include "utilities.hpp"
+//#include "utilities.hpp"
+#include <fstream> // utilities not working on its own for now so including the fcn i need
 
 using namespace cv;
 using namespace std;
 
 namespace SetFinding {
+
+
+        
+            vector<Point> contourFromCSV(string fileName) {
+                ifstream file;
+                vector<Point> contour;
+
+                file.open(fileName);
+
+                if(file.fail()) {
+                    cout << "Failed to open this file for reading" << endl;
+
+                    return vector<Point>{Point(0,0)};
+                }
+
+                string line;
+                int x,y,i;
+
+                // Run on one line of the CSV at a time (one Point obj)
+                while (!file.eof()) {
+                    getline(file, line, '\n');
+
+                    // Find the separator ','
+                    i = line.find(',');
+
+                    // X is all the nums up until the comma
+                    x = stoi(line.substr(0,i));
+                    // Y is after the comma, til EOS minus the '\n'
+                    y = stoi(line.substr(i + 1,line.length() - i - 2));
+
+                    contour.push_back(Point(x,y));
+                }
+                
+                return contour;
+            }
 
 
 
@@ -141,9 +177,6 @@ namespace SetFinding {
                     Mat binaryCard;
                     cvtColor(Mat(maskImage,rect), binaryCard, COLOR_BGR2GRAY);
 
-                    imshow("bin card #" + to_string(contoursIndex), binaryCard);
-                    waitKey(0);
-
                     binaryShapes.push_back(binaryCard);
                     shapeLocations.push_back(rect);
                     shapeContours.push_back(contours[idx]);
@@ -170,40 +203,26 @@ namespace SetFinding {
 
         void Card::whatShape() {
             // Retrieve each reference shape
-            Mat refDiamond = imread("/shape_references/diamond.jpg", CV_8UC1);
-            Mat refSquiggle = imread("/shape_references/squiggle.jpg", CV_8UC1);
-            Mat refOval = imread("/shape_references/oval.jpg", CV_8UC1);
+            // Mat refDiamond = imread("/shape_references/diamond.jpg", CV_8UC1);
+            // Mat refSquiggle = imread("/shape_references/squiggle.jpg", CV_8UC1);
+            // Mat refOval = imread("/shape_references/oval.jpg", CV_8UC1);
 
+            // vector<Mat> refShapes = {refDiamond, refSquiggle, refOval};
 
+            vector<vector<Point>> refContours;
 
-            vector<Mat> refShapes = {refDiamond, refSquiggle, refOval};
+            refContours.push_back(SetFinding::contourFromCSV("/resources/contourDiamond.csv"));
+            refContours.push_back(SetFinding::contourFromCSV("/resources/contourOval.csv"));
+            refContours.push_back(SetFinding::contourFromCSV("/resources/contourSquiggle.csv"));
 
-            vector<vector<vector<Point>>> refContours;
-            vector<vector<Point>> refContour;
-
-            for (int j = 0; j < refShapes.size(); j++) {
-                vector<vector<Point>> contours;
-                vector<Vec4i> hierarchy; // This code based on https://docs.opencv.org/3.4/d6/d6e/group__imgproc__draw.html#ga746c0625f1781f1ffc9056259103edbc
-                findContours(refShapes[j], refContour, hierarchy,
-                    RETR_CCOMP, CHAIN_APPROX_SIMPLE );
-                refContours.push_back(refContour);
-            }
-
-            for (vector<vector<Point>> cntList : refContours) {
-                for (vector<Point> contour : cntList) {
-                    if (contourArea(contour) > refDiamond.rows * refDiamond.cols / 2) {
-                        shapeContours.push_back(contour);
-                    }
-                }
-            }
 
             vector<shape> shapeGuesses;
             for (Mat shape : binaryShapes) {
                 
                 vector<double> comparisonReturns;
 
-                for (Mat refShape : refShapes) {
-                    comparisonReturns.push_back(matchShapes(shape,refShape,CONTOURS_MATCH_I2,0.0));
+                for (vector<Point> refCnt : refContours) {
+                    comparisonReturns.push_back(matchShapes(shape,refCnt,CONTOURS_MATCH_I2,0.0));
                 }
 
                 double min = comparisonReturns[0];

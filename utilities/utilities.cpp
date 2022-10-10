@@ -11,6 +11,7 @@ using namespace std;
 
 // OpenCV libs
 #include <opencv2/opencv.hpp>
+#include <fstream>
 //#include <opencv2/highgui.hpp>
 
 namespace SetFinding {
@@ -55,6 +56,63 @@ namespace SetFinding {
                 }
                 waitKey(0);
             }
+            // Other image-showing code for ease of use:
+            // And shows the other relebant members, the source image and its mask components
+            // imshow("src",sourceImage);
+            // imshow("mask",maskImage);
+            // imshow("mask Shapes",maskedShapes);
+            ////////////////////////////////////////////////////////////
+
+
+            // Take some images (binary images of shapes) and extract contours
+            // that represent the shapes, for future use as a reference contour in matchShapes
+            void contoursFromImages(vector<Mat> refShapes) {
+                ///TODO: Not working for now, doesn't find any contours in the refShapes
+
+                vector<vector<vector<Point>>> refContours(3);
+
+                for (int j = 0; j < refShapes.size(); j++) {
+                    vector<vector<Point>> contours;
+                    vector<Vec4i> hierarchy; // This code based on https://docs.opencv.org/3.4/d6/d6e/group__imgproc__draw.html#ga746c0625f1781f1ffc9056259103edbc
+                    findContours(refShapes[j], refContours[j], hierarchy,
+                        RETR_CCOMP, CHAIN_APPROX_SIMPLE );
+                }
+
+                vector<vector<Point>> shapeContours;
+
+                for (vector<vector<Point>> cntList : refContours) {
+                    for (vector<Point> contour : cntList) {
+                        if (contourArea(contour) > refShapes[0].rows * refShapes[0].cols / 2) {
+                            shapeContours.push_back(contour);
+                        }
+                    }
+                }
+            
+            }
+
+            void saveContourToCSV(vector<Point> contour, string fileName) {
+                ofstream file;
+                
+                file.open(fileName);
+
+                // Column headers
+                file << "x,y\n";
+
+                for (auto itr = contour.begin(); itr < contour.end(); itr++) {
+                    // Push one point (x,y) to a line, sep. by comma and terminated by newline
+                    file << itr->x << "," << itr->y << "\n";
+                }
+
+            }
+
+
+            Mat resizeMat(Mat source, Size2i newSize) {
+                Mat resizedImage;
+
+                resize(source, resizedImage, newSize, INTER_LINEAR);
+
+                return resizedImage;
+            }
 
 
             // Extract shape from image, save it out to an appropriately sized file 
@@ -92,12 +150,8 @@ namespace SetFinding {
                     imwrite(fileName,shape);
 
                 }
-
-                
+ 
             }
-
-
-
 
         };
 }

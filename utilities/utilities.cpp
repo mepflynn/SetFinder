@@ -3,16 +3,19 @@
 // It consists of development utilities which have been taken
 // out of the main build but are kept here for possible future need
 
+
+// OpenCV includes
+#include <opencv2/opencv.hpp>
+
+// Cpp includes
+#include <fstream>
+
+// Local includes
+#include "utilities.hpp"
+
 // Using keywords
 using namespace cv;
 using namespace std;
-
-// Include statements
-
-// OpenCV libs
-#include <opencv2/opencv.hpp>
-#include <fstream>
-//#include <opencv2/highgui.hpp>
 
 namespace SetFinding {
     class devUtilities {

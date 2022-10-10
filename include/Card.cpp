@@ -31,9 +31,11 @@ namespace SetFinding {
                 string line;
                 int x,y,i;
 
+                // Skip the initial column identifiers (x,y)
+                getline(file,line,'\n');
+
                 // Run on one line of the CSV at a time (one Point obj)
-                while (!file.eof()) {
-                    getline(file, line, '\n');
+                while (getline(file, line, '\n')) {
 
                     // Find the separator ','
                     i = line.find(',');
@@ -45,6 +47,8 @@ namespace SetFinding {
 
                     contour.push_back(Point(x,y));
                 }
+
+                file.close();
                 
                 return contour;
             }
@@ -211,9 +215,9 @@ namespace SetFinding {
 
             vector<vector<Point>> refContours;
 
-            refContours.push_back(SetFinding::contourFromCSV("/resources/contourDiamond.csv"));
-            refContours.push_back(SetFinding::contourFromCSV("/resources/contourOval.csv"));
-            refContours.push_back(SetFinding::contourFromCSV("/resources/contourSquiggle.csv"));
+            refContours.push_back(SetFinding::contourFromCSV("include/resources/contourDiamond.csv"));
+            refContours.push_back(SetFinding::contourFromCSV("include/resources/contourOval.csv"));
+            refContours.push_back(SetFinding::contourFromCSV("include/resources/contourSquiggle.csv"));
 
 
             vector<shape> shapeGuesses;
@@ -262,6 +266,9 @@ namespace SetFinding {
                         break;
                 }
             }
+
+            imshow("And the related card",maskImage);
+            waitKey(0);
 
             
         }

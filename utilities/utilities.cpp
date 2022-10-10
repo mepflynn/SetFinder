@@ -109,6 +109,8 @@ namespace SetFinding {
                     file << to_string(itr->x) << "," << to_string(itr->y) << "\n";
                 }
 
+                file.close();
+
             }
 
             vector<Point> contourFromCSV(string fileName) {
@@ -119,6 +121,10 @@ namespace SetFinding {
 
                 string line;
                 int x,y,i;
+
+                // Skip the initial column identifiers (x,y)
+                getline(file,line,'\n');
+
 
                 // Run on one line of the CSV at a time (one Point obj)
                 while (!file.eof()) {
@@ -134,6 +140,8 @@ namespace SetFinding {
 
                     contour.push_back(Point(x,y));
                 }
+
+                file.close();
                 
                 return contour;
             }

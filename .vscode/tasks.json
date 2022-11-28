@@ -11,6 +11,7 @@
                 "${file}",
                 "${workspaceFolder}\\include\\Card.o",
                 "${workspaceFolder}\\include\\Board.o",
+                "${workspaceFolder}\\utilities\\utilities.o",
                 "-o",
                 "${fileDirname}\\${fileBasenameNoExtension}.exe",
                 "-I","${workspaceFolder}\\include",

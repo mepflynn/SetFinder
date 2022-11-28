@@ -6,10 +6,9 @@
 
 // Local includes
 #include "Card.hpp"
-#include "utilities.hpp"
 
-//#include "utilities.hpp"
-#include <fstream> // utilities not working on its own for now so including the fcn i need
+///TODO: Utilities include not working at compile time
+#include "utilities.hpp" 
 
 using namespace cv;
 using namespace std;

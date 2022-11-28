@@ -22,9 +22,9 @@ namespace SetFinding{
 
         Mat resizeMat(Mat source, Size2i newSize);
 
-        void saveShapeToJPG(Mat img, Rect boundRect, string fileName);
+        Mat normalizeTo300(Mat source);
 
-        
+        void saveShapeToJPG(Mat img, Rect boundRect, string fileName);
 
 }
 

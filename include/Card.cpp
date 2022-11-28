@@ -6,52 +6,17 @@
 
 // Local includes
 #include "Card.hpp"
+#include "utilities.hpp"
+
 //#include "utilities.hpp"
 #include <fstream> // utilities not working on its own for now so including the fcn i need
 
 using namespace cv;
 using namespace std;
 
+int cIndex = 1;
+
 namespace SetFinding {
-
-
-        
-            vector<Point> contourFromCSV(string fileName) {
-                ifstream file;
-                vector<Point> contour;
-
-                file.open(fileName);
-
-                if(file.fail()) {
-                    cout << "Failed to open this file for reading" << endl;
-
-                    return vector<Point>{Point(0,0)};
-                }
-
-                string line;
-                int x,y,i;
-
-                // Skip the initial column identifiers (x,y)
-                getline(file,line,'\n');
-
-                // Run on one line of the CSV at a time (one Point obj)
-                while (getline(file, line, '\n')) {
-
-                    // Find the separator ','
-                    i = line.find(',');
-
-                    // X is all the nums up until the comma
-                    x = stoi(line.substr(0,i));
-                    // Y is after the comma, til EOS minus the '\n'
-                    y = stoi(line.substr(i + 1,line.length() - i - 2));
-
-                    contour.push_back(Point(x,y));
-                }
-
-                file.close();
-                
-                return contour;
-            }
 
 
 
@@ -173,15 +138,27 @@ namespace SetFinding {
                     
                     // Also, draw this contour into a separate image and normalize it
                     // This image will be compared to references to determine the shape's identity
+                    Mat binaryCard;
+                    cvtColor(Mat(maskImage,rect), binaryCard, COLOR_BGR2GRAY);
+
+                    // Normalize, then push back to a list
+                    binaryShapes.push_back(normalizeTo300(binaryCard));
+
+
+                    ///TODO: Normalize before writing the contour out to file
+                    ///      How can we normalize a contour?
+                    string fileName = "contour" + to_string(cIndex) + ".csv";
+                    saveContourToCSV(contours[idx],fileName);
+                    cIndex++;
+
+                    
+
                     // WARNING: This new image is simply a partial pointer to the original maskImage
                     // if maskImage gets changes or goes out of scope, the information is lost.
                     
                     // Push the selected shape image into binaryShapes for shape analysis
                     // Make a temp Mat to turn this image into singlechannel for future call to matchShape()
-                    Mat binaryCard;
-                    cvtColor(Mat(maskImage,rect), binaryCard, COLOR_BGR2GRAY);
 
-                    binaryShapes.push_back(binaryCard);
                     shapeLocations.push_back(rect);
                     shapeContours.push_back(contours[idx]);
                 }            
@@ -215,18 +192,18 @@ namespace SetFinding {
 
             vector<vector<Point>> refContours;
 
-            refContours.push_back(SetFinding::contourFromCSV("include/resources/contourDiamond.csv"));
-            refContours.push_back(SetFinding::contourFromCSV("include/resources/contourOval.csv"));
-            refContours.push_back(SetFinding::contourFromCSV("include/resources/contourSquiggle.csv"));
+            refContours.push_back(contourFromCSV("include/resources/contourDiamond.csv"));
+            refContours.push_back(contourFromCSV("include/resources/contourSquiggle.csv"));
+            refContours.push_back(contourFromCSV("include/resources/contourOval.csv"));
 
 
             vector<shape> shapeGuesses;
-            for (Mat shape : binaryShapes) {
+            for (vector<Point> shapeContour : shapeContours) {
                 
                 vector<double> comparisonReturns;
 
                 for (vector<Point> refCnt : refContours) {
-                    comparisonReturns.push_back(matchShapes(shape,refCnt,CONTOURS_MATCH_I2,0.0));
+                    comparisonReturns.push_back(matchShapes(shapeContour,refCnt,CONTOURS_MATCH_I1,0.0));
                 }
 
                 double min = comparisonReturns[0];
@@ -288,7 +265,7 @@ namespace SetFinding {
                     throw invalid_argument("Invalid argument size. Card must have 1-3 shapes detected. Check shape contouring.");
                 }
             } catch(invalid_argument) {
-                // cout << "Found " <<  binaryShapes.size() << " shapes." << endl;
+                // 
 
                 // for (Mat oneShape : binaryShapes) {
                 //     cout << "Area of shape:" << oneShape.rows << " by " << oneShape.cols << endl;
@@ -297,26 +274,12 @@ namespace SetFinding {
                 if (binaryShapes.empty()) {
                     cout << "No shapes found." << endl;
                     return;
-                }
-
-                // int shapeNum = 1;
-                // for (Mat oneShape : binaryShapes) {
-                //     imshow("shape number" + to_string(shapeNum),oneShape);
-                //     shapeNum++;
-                // }
-
-                // imshow("sourceImage",sourceImage);
-                // imshow("maskImage",maskImage);
-                // imshow("maskedShapes",maskedShapes);
-                // waitKey(0);
-
-                // return;
-
-                
+                }             
 
                 // The maskAndIsolateShapes function currently over-detects squiggles and ovals,
                 // it finds them each twice
                 // The bandaid solution here is to delete half the shapes when there are too many
+                cout << "Found " <<  binaryShapes.size() << " shapes." << endl;
                 cout << "Too many shapes found, halving" << endl;
                 int halfSize = binaryShapes.size() / 2;
                 while (binaryShapes.size() > halfSize) {

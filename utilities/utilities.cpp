@@ -10,7 +10,7 @@
 // Cpp includes
 #include <fstream>
 
-// Local includes
+// Local includesCSV
 #include "utilities.hpp"
 
 // Using keywords
@@ -18,14 +18,13 @@ using namespace cv;
 using namespace std;
 
 namespace SetFinding {
-    class devUtilities {
-        public:
+
             // Writing a Mat out to be a .jpg image
             void printImage(Mat image) {
                 // Write cards out to images for finding ideal erode/dilate parameters
                 int randint = (rand()&300);
                 string cardName = "card" + to_string(randint) + ".jpg";
-                cv::imwrite(cardName, image); 
+                imwrite(cardName, image); 
             }
 
             // Image is a binary image that has been thresholded to a given value
@@ -113,11 +112,18 @@ namespace SetFinding {
 
             }
 
+                    
             vector<Point> contourFromCSV(string fileName) {
                 ifstream file;
                 vector<Point> contour;
 
                 file.open(fileName);
+
+                if(file.fail()) {
+                    cout << "Failed to open this file for reading" << endl;
+
+                    return vector<Point>{Point(0,0)};
+                }
 
                 string line;
                 int x,y,i;
@@ -125,10 +131,8 @@ namespace SetFinding {
                 // Skip the initial column identifiers (x,y)
                 getline(file,line,'\n');
 
-
                 // Run on one line of the CSV at a time (one Point obj)
-                while (!file.eof()) {
-                    getline(file, line, '\n');
+                while (getline(file, line, '\n')) {
 
                     // Find the separator ','
                     i = line.find(',');
@@ -155,6 +159,10 @@ namespace SetFinding {
                 return resizedImage;
             }
 
+            Mat normalizeTo300(Mat source) {
+                return resizeMat(source, Size2i(300,300));
+            }
+
 
             // Extract shape from image, save it out to an appropriately sized file 
             void saveShapeToJPG(Mat img, Rect boundRect, string fileName) {
@@ -172,28 +180,27 @@ namespace SetFinding {
                 //////////////////////////////////////////////////////////////
                 //Below is a more fleshed out and case-specific implementation
 
-                vector<int> shapeIndices;
-                // previously populated the above vector with indices of suspected shapes in contours[]
-                // This needs implementation for the following to work
+                // vector<int> shapeIndices;
+                // // previously populated the above vector with indices of suspected shapes in contours[]
+                // // This needs implementation for the following to work
 
-                string fileName;
-                int fileNum = rand()&255;
-                for(int ix : shapeIndices) { 
-                    //Rect boundRect = boundingRect(contours[ix]);
+                // string fileName;
+                // int fileNum = rand()&255;
+                // for(int ix : shapeIndices) { 
+                //     //Rect boundRect = boundingRect(contours[ix]);
 
                     
             
-                    fileName = "card" + to_string(fileNum) + ".jpg";
-                    fileNum++;
+                //     fileName = "card" + to_string(fileNum) + ".jpg";
+                //     fileNum++;
 
-                    //Mat shape = Mat(maskImage, boundRect);
+                //     //Mat shape = Mat(maskImage, boundRect);
 
-                    imwrite(fileName,shape);
+                //     imwrite(fileName,shape);
 
-                }
+                // }
  
             }
 
-        };
 }
 

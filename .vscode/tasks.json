@@ -154,8 +154,21 @@
             }
         },
         {
+            "label": "cleanup_before_build",
+            "type": "shell",
+            "command": "rm",
+            "args": [
+                "-f",
+                "./include/Card.o",
+                "./include/Board.o",
+                "./utilities/utilities.o"
+            ]
+        
+        },
+        {
             "label": "Build",
             "dependsOn": [
+                "cleanup_before_build",
                 "build utilities dependency",
                 "build card dependency",
                 "build board dependency",

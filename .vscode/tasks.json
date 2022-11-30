@@ -50,7 +50,7 @@
             "args": [
                 "-c",
                 "-g",
-                "${workspaceFolderBasename}\\include\\Card.cpp",
+                "${workspaceFolder}\\include\\Card.cpp",
                 "-I","C:\\Users\\maxfl\\Documents\\VS_Code_Projects\\CPP_Projects\\SetFinder\\utilities",               
                 "-I","C:\\opencv\\OpenCV-MinGW-Build-OpenCV-4.1.1-x64\\include",
                 "-L","C:\\opencv\\OpenCV-MinGW-Build-OpenCV-4.1.1-x64\\x64\\mingw\\bin",               
@@ -87,7 +87,7 @@
             "args": [
                 "-c",
                 "-g",
-                "${workspaceFolderBasename}\\include\\Board.cpp",
+                "${workspaceFolder}\\include\\Board.cpp",
                 "-I","C:\\Users\\maxfl\\Documents\\VS_Code_Projects\\CPP_Projects\\SetFinder\\include",               
                 "-I","C:\\opencv\\OpenCV-MinGW-Build-OpenCV-4.1.1-x64\\include",
                 "-L","C:\\opencv\\OpenCV-MinGW-Build-OpenCV-4.1.1-x64\\x64\\mingw\\bin",               
@@ -124,7 +124,7 @@
             "args": [
                 "-c",
                 "-g",
-                "${workspaceFolderBasename}\\utilities\\utilities.cpp",             
+                "${workspaceFolder}\\utilities\\utilities.cpp",             
                 "-I","C:\\opencv\\OpenCV-MinGW-Build-OpenCV-4.1.1-x64\\include",
                 "-L","C:\\opencv\\OpenCV-MinGW-Build-OpenCV-4.1.1-x64\\x64\\mingw\\bin",               
                 "-llibopencv_calib3d411",
@@ -168,7 +168,6 @@
         {
             "label": "Build",
             "dependsOn": [
-                "cleanup_before_build",
                 "build utilities dependency",
                 "build card dependency",
                 "build board dependency",
